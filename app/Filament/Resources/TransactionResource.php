@@ -50,11 +50,13 @@ class TransactionResource extends Resource
                 Tables\Columns\TextColumn::make('product.name')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('type')
+                    Tables\Columns\TextColumn::make('type')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'in' => 'success',
                         'out' => 'danger',
+                        'sale' => 'warning', // Handle 'sale' transactions
+                        default => 'gray', // Handle any unexpected values safely
                     }),
                 Tables\Columns\TextColumn::make('quantity')
                     ->numeric()
