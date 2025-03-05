@@ -2,6 +2,10 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\ProductResource\Widgets\TotalSalesWidget;
+use App\Filament\Widgets\ExpiringSoonProducts;
+use App\Filament\Widgets\LowStockProducts;
+use App\Filament\Widgets\SalesChart;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -38,7 +42,12 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
+                // Widgets\AccountWidget::class,
+                // TotalSalesWidget::class,
+
+                LowStockProducts::class,
+                ExpiringSoonProducts::class,
+                SalesChart::class,
 
             ])
             ->middleware([
