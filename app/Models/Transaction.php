@@ -14,6 +14,10 @@ class Transaction extends Model
         'quantity',
         'notes',
         'transaction_date',
+        'prescription',
+        'remarks',
+        'amount_paid',
+        'change_amount',
     ];
 
     protected static function booted()

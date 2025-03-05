@@ -18,11 +18,14 @@ class ManagePos extends Page
     public $cart = [];
     public $totalAmount = 0;
     public $selectedProducts = [];
-
+    public $amountPaid = 0; // ✅ Declare amountPaid
+    public $change = 0; // ✅ Declare change
     public function mount()
     {
         $this->cart = [];
         $this->totalAmount = 0;
+        $this->amountPaid = 0; // ✅ Initialize amountPaid
+        $this->change = 0; // ✅ Initialize change
     }
 
     public function form(Form $form): Form
@@ -66,6 +69,10 @@ class ManagePos extends Page
         $this->updateTotalAmount();
         $this->selectedProducts = []; // Reset selection
     }
+    public function updateChange()
+{
+    $this->change = floatval($this->amountPaid) - floatval($this->totalAmount);
+}
 
     public function removeFromCart($index)
     {
@@ -123,11 +130,13 @@ class ManagePos extends Page
 
             // Create a transaction entry for the sale
             Transaction::create([
-                'product_id' => $item['product_id'],
-                'type' => 'out', // 'out' means stock is reduced
-                'quantity' => $item['quantity'],
-                'transaction_date' => now(),
-                'notes' => 'Sold via POS checkout',
+          'product_id' => $item['product_id'],
+    'type' => 'out',
+    'quantity' => $item['quantity'],
+    'transaction_date' => now(),
+    'amount_paid' => floatval($this->amountPaid), // ✅ Ensure it's a number
+    'change_amount' => floatval($this->change), // ✅ Add this line
+    'notes' => 'Sold via POS checkout',
             ]);
         }
 

@@ -31,116 +31,81 @@ class PosResource extends Resource
     {
         return $form
             ->schema([
-               // Product Search
-               TextInput::make('search')
-               ->label('Search Products')
-               ->placeholder('Enter product name or barcode')
-               ->live()
-               ->afterStateUpdated(function ($state, Set $set) {
-                   $products = Product::where('name', 'like', "%{$state}%")
-                       ->orWhere('barcode', 'like', "%{$state}%")
-                       ->limit(10)
-                       ->get();
+                // Cart Items (Repeater)
+                Repeater::make('cart')
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('Product')
+                            ->disabled(),
+                        TextInput::make('price')
+                            ->label('Price')
+                            ->numeric()
+                            ->disabled(),
+                        TextInput::make('quantity')
+                            ->label('Quantity')
+                            ->numeric()
+                            ->default(1)
+                            ->live()
+                            ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                                $index = $get('__index');
+                                $price = $get("cart.{$index}.price");
+                                $set("cart.{$index}.total", $price * $state);
 
-                   $set('searchResults', $products);
-               }),
+                                // Update total amount dynamically
+                                $totalAmount = collect($get('cart'))->sum('total');
+                                $set('totalAmount', $totalAmount);
+                            }),
+                        TextInput::make('total')
+                            ->label('Total')
+                            ->numeric()
+                            ->disabled(),
+                    ])
+                    ->live()
+                    ->columns(4),
 
-           // Display Search Results
-           Forms\Components\Grid::make()
-               ->schema([
-                   Select::make('selectedProduct')
-                       ->label('Select Product')
-                       ->options(function (Get $get): Collection {
-                           return $get('searchResults') ?? collect();
-                       })
-                       ->searchable()
-                       ->live()
-                       ->afterStateUpdated(function ($state, Set $set, $get) {
-                           if ($state) {
-                               $product = Product::find($state);
-                               $cart = $get('cart') ?? [];
-                               $cart[] = [
-                                   'product_id' => $product->id,
-                                   'name' => $product->name,
-                                   'price' => $product->price,
-                                   'quantity' => 1,
-                                   'total' => $product->price * 1,
-                               ];
-                               $set('cart', $cart);
-                               $set('selectedProduct', null); // Reset selected product
-                           }
-                       }),
-               ]),
+                // Total Amount (Auto-Calculated)
+                TextInput::make('totalAmount')
+                    ->label('Total Amount')
+                    ->numeric()
+                    ->disabled()
+                    ->default(0)
+                    ->live()
+                    ->afterStateHydrated(function (Set $set, Get $get) {
+                        $totalAmount = collect($get('cart'))->sum('total');
+                        $set('totalAmount', $totalAmount);
+                    }),
 
-           // Cart
-           Repeater::make('cart')
-               ->schema([
-                   TextInput::make('name')
-                       ->label('Product')
-                       ->disabled(),
-                   TextInput::make('price')
-                       ->label('Price')
-                       ->numeric()
-                       ->disabled(),
-                   TextInput::make('quantity')
-                       ->label('Quantity')
-                       ->numeric()
-                       ->default(1)
-                       ->live()
-                       ->afterStateUpdated(function ($state, Set $set, $get) {
-                           $index = $get('__index');
-                           $price = $get("cart.{$index}.price");
-                           $set("cart.{$index}.total", $price * $state);
-                       }),
-                   TextInput::make('total')
-                       ->label('Total')
-                       ->numeric()
-                       ->disabled(),
-               ])
-               ->live()
-               ->columns(4),
+                // Amount Paid
+                TextInput::make('amount_paid')
+                    ->label('Amount Paid')
+                    ->numeric()
+                    ->live()
+                    ->default(0)
+                    ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                        $totalAmount = $get('totalAmount') ?? 0;
+                        $change = max(0, $state - $totalAmount);
+                        $set('change', $change);
+                    }),
 
-           // Total
-           TextInput::make('totalAmount')
-               ->label('Total Amount')
-               ->numeric()
-               ->disabled()
-               ->default(function (Get $get) {
-                   return collect($get('cart'))->sum('total');
-               }),
-
-           // Checkout Button
-           Forms\Components\Actions::make([
-               Action::make('checkout')
-                   ->label('Checkout')
-                   ->action(function (array $data) {
-                       // Process the sale and update inventory
-                       $cart = $data['cart'];
-                       foreach ($cart as $item) {
-                           // Create a transaction
-                           Transaction::create([
-                               'product_id' => $item['product_id'],
-                               'type' => 'out',
-                               'quantity' => $item['quantity'],
-                               'transaction_date' => now(),
-                           ]);
-                       }
-
-                       // Show success message
-                       Notification::make()
-                           ->title('Sale processed successfully!')
-                           ->success()
-                           ->send();
-                   }),
-           ]),
-       ]);
+                // Change (Auto-Calculated)
+                TextInput::make('change')
+                    ->label('Change')
+                    ->numeric()
+                    ->disabled()
+                    ->default(0),
+            ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('amount_paid')
+                    ->label('Amount Paid')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('change_amount')
+                    ->label('Change')
+                    ->sortable(),
             ])
             ->filters([
                 //

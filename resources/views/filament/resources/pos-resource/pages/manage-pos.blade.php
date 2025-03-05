@@ -18,6 +18,8 @@
                     <th class="px-4 py-2 border">Price</th>
                     <th class="px-4 py-2 border">Quantity</th>
                     <th class="px-4 py-2 border">Total</th>
+                    <th class="px-4 py-2 border">Prescription</th>
+                    <th class="px-4 py-2 border">Remarks</th>
                     <th class="px-4 py-2 border">Actions</th>
                 </tr>
             </thead>
@@ -27,20 +29,53 @@
                         <td class="px-4 py-2 border">{{ $item['name'] }}</td>
                         <td class="px-4 py-2 border">{{ number_format($item['price'], 2) }}</td>
                         <td class="px-4 py-2 border">
-                            <input type="number" wire:model="cart.{{ $index }}.quantity" class="w-16 text-center border rounded" min="1" wire:change="updateCart">
+                            <input type="number" wire:model="cart.{{ $index }}.quantity"
+                                   class="w-16 text-center border rounded" min="1" wire:change="updateCart">
                         </td>
                         <td class="px-4 py-2 border">{{ number_format($item['total'], 2) }}</td>
                         <td class="px-4 py-2 border">
-                            <x-filament::button wire:click="removeFromCart({{ $index }})" color="danger">Remove</x-filament::button>
+                            <select wire:model="cart.{{ $index }}.prescription" class="w-full text-center border rounded">
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </td>
+                        <td class="px-4 py-2 border">
+                            <input type="text" wire:model="cart.{{ $index }}.remarks"
+                                   class="w-full text-center border rounded" placeholder="Enter remarks">
+                        </td>
+                        <td class="px-4 py-2 border">
+                            <x-filament::button wire:click="removeFromCart({{ $index }})" color="danger">
+                                Remove
+                            </x-filament::button>
                         </td>
                     </tr>
                 @endforeach
             </tbody>
+
+            <!-- Display Amount Paid and Change Below the Table -->
+
         </table>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="px-4 py-2 font-bold text-right border">Total Amount:</td>
+                <td class="px-4 py-2 font-bold border">{{ number_format($totalAmount, 2) }}</td>
+                <td colspan="3"></td>
+            </tr>
+            <tr>
+                <td colspan="3" class="px-4 py-2 font-bold text-right border">Amount Paid:</td>
+                <td class="px-4 py-2 border">
+                    <input type="number" wire:model="amountPaid" wire:input="updateChange"
+                           class="w-full text-center border rounded" min="0">
+                </td>
+                <td colspan="3"></td>
+            </tr>
+            <tr>
+                <td colspan="3" class="px-4 py-2 font-bold text-right border">Change:</td>
+                <td class="px-4 py-2 font-bold text-green-600 border">{{ number_format($change, 2) }}</td>
+                <td colspan="3"></td>
+            </tr>
+        </tfoot>
     </div>
 
-    <div class="mt-4">
-        <h3 class="text-lg font-bold">Total: ₱{{ number_format($totalAmount, 2) }}</h3>
-    </div>
 
 </x-filament::page>
