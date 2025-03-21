@@ -10,6 +10,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -19,7 +20,22 @@ class ProductResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-cube';
     protected static ?string $navigationGroup = 'Inventory Management';
-
+      // Make the resource globally searchable
+      public static function getGloballySearchableAttributes(): array
+      {
+          return ['name', 'quantity'];
+      }
+      public static function getGlobalSearchResultDetails(Model $record): array
+      {
+        return [
+            'Quantity' => $record->quantity,
+        ];
+      }
+      public static function getGlobalSearchResultUrl(Model $record): string
+      {
+          return static::getUrl('index', ['record' => $record]);
+      }
+      
 
     public static function form(Form $form): Form
     {
