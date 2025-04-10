@@ -18,7 +18,7 @@ class CategoryResource extends Resource
     protected static ?string $model = Category::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-tag'; // Icon for the sidebar
-    protected static ?string $navigationGroup = 'Inventory Management'; // Group in the sidebar
+  
 
     public static function form(Form $form): Form
     {

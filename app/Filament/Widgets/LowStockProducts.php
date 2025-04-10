@@ -12,7 +12,7 @@ class LowStockProducts extends StatsOverviewWidget
     protected int|string|array $columnSpan  = 1;
     protected function getCards(): array
     {
-        $lowStockCount = Product::where('quantity', '<', 10)->count(); // Threshold for low stock
+        $lowStockCount = Product::where('quantity', '<', value: 10)->count(); // Threshold for low stock
 
         return [
             Card::make('Low Stock Products', $lowStockCount)

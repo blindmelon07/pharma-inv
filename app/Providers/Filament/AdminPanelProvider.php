@@ -6,10 +6,12 @@ use App\Filament\Resources\ProductResource\Widgets\TotalSalesWidget;
 use App\Filament\Widgets\ExpiringSoonProducts;
 use App\Filament\Widgets\LowStockProducts;
 use App\Filament\Widgets\SalesChart;
+use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Notifications\Notification;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -28,6 +30,7 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        
         return $panel
             ->default()
             ->id('admin')
@@ -76,6 +79,9 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+            
 
     }
+ 
+
 }

@@ -15,6 +15,7 @@ class Product extends Model
         'category_id',
         'supplier_id',
         'quantity',
+        'quantity_per_box',
         'price',
         'expiry_date',
         'notes'

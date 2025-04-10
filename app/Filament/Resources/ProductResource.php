@@ -47,8 +47,13 @@ class ProductResource extends Resource
                 ->required(),
             Forms\Components\Select::make('supplier_id')
                 ->relationship('supplier', 'name')
-                ->required(),
+            ->required(),
             Forms\Components\TextInput::make('quantity')->numeric()->required(),
+            Forms\Components\TextInput::make('quantity_per_box')
+    ->numeric()
+    ->default(1)
+    ->required()
+    ->label('Quantity per Box'),
             Forms\Components\TextInput::make('price')->numeric()->required(),
             Forms\Components\DatePicker::make('expiry_date'),
             ]);
@@ -62,6 +67,7 @@ class ProductResource extends Resource
             Tables\Columns\TextColumn::make('category.name')->sortable(),
             Tables\Columns\TextColumn::make('supplier.name')->sortable(),
             Tables\Columns\TextColumn::make('quantity')->sortable(),
+            Tables\Columns\TextColumn::make('quantity_per_box')->label('Qty/Box')->sortable(),
             Tables\Columns\TextColumn::make('price')->sortable(),
             Tables\Columns\TextColumn::make('expiry_date')->date(),
             ])
