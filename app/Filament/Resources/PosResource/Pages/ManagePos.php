@@ -9,6 +9,7 @@ use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use App\Models\Product;
 use App\Models\Transaction;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ManagePos extends Page
 {
@@ -18,14 +19,15 @@ class ManagePos extends Page
     public $cart = [];
     public $totalAmount = 0;
     public $selectedProducts = [];
-    public $amountPaid = 0; // ✅ Declare amountPaid
-    public $change = 0; // ✅ Declare change
+    public $amountPaid = 0;
+    public $change = 0;
+
     public function mount()
     {
         $this->cart = [];
         $this->totalAmount = 0;
-        $this->amountPaid = 0; // ✅ Initialize amountPaid
-        $this->change = 0; // ✅ Initialize change
+        $this->amountPaid = 0;
+        $this->change = 0;
     }
 
     public function form(Form $form): Form
@@ -34,10 +36,10 @@ class ManagePos extends Page
             Select::make('selectedProducts')
                 ->label('Select Products')
                 ->options(Product::pluck('name', 'id'))
-                ->multiple() // Allow multiple selection
+                ->multiple()
                 ->searchable()
                 ->live()
-                ->afterStateUpdated(fn ($state) => $this->addToCart($state)),
+                ->afterStateUpdated(fn($state) => $this->addToCart($state)),
         ]);
     }
 
@@ -49,8 +51,7 @@ class ManagePos extends Page
             $product = Product::find($productId);
             if (!$product) continue;
 
-            // Check if product is already in cart
-            $existingIndex = collect($this->cart)->search(fn ($item) => $item['product_id'] == $product->id);
+            $existingIndex = collect($this->cart)->search(fn($item) => $item['product_id'] == $product->id);
 
             if ($existingIndex !== false) {
                 $this->cart[$existingIndex]['quantity']++;
@@ -67,18 +68,7 @@ class ManagePos extends Page
         }
 
         $this->updateTotalAmount();
-        $this->selectedProducts = []; // Reset selection
-    }
-    public function updateChange()
-{
-    $this->change = floatval($this->amountPaid) - floatval($this->totalAmount);
-}
-
-    public function removeFromCart($index)
-    {
-        unset($this->cart[$index]);
-        $this->cart = array_values($this->cart);
-        $this->updateTotalAmount();
+        $this->selectedProducts = [];
     }
 
     public function updateCart()
@@ -90,9 +80,21 @@ class ManagePos extends Page
         $this->updateTotalAmount();
     }
 
+    public function updateChange()
+    {
+        $this->change = floatval($this->amountPaid) - floatval($this->totalAmount);
+    }
+
+    public function removeFromCart($index)
+    {
+        unset($this->cart[$index]);
+        $this->cart = array_values($this->cart);
+        $this->updateTotalAmount();
+    }
+
     public function updateTotalAmount()
     {
-        $this->totalAmount = collect($this->cart)->sum(fn ($item) => $item['total']);
+        $this->totalAmount = collect($this->cart)->sum(fn($item) => $item['total']);
     }
 
     public function checkout()
@@ -116,7 +118,6 @@ class ManagePos extends Page
                 continue;
             }
 
-            // Ensure there is enough stock
             if ($product->quantity < $item['quantity']) {
                 Notification::make()
                     ->title("Not enough stock for {$product->name}. Available: {$product->quantity}")
@@ -125,28 +126,40 @@ class ManagePos extends Page
                 continue;
             }
 
-            // Decrease the product stock
             $product->decrement('quantity', $item['quantity']);
 
-            // Create a transaction entry for the sale
             Transaction::create([
-          'product_id' => $item['product_id'],
-    'type' => 'out',
-    'quantity' => $item['quantity'],
-    'transaction_date' => now(),
-    'amount_paid' => floatval($this->amountPaid), // ✅ Ensure it's a number
-    'change_amount' => floatval($this->change), // ✅ Add this line
-    'notes' => 'Sold via POS checkout',
+                'product_id' => $item['product_id'],
+                'type' => 'out',
+                'quantity' => $item['quantity'],
+                'transaction_date' => now(),
+                'amount_paid' => floatval($this->amountPaid),
+                'change_amount' => floatval($this->change),
+                'notes' => 'Sold via POS checkout',
             ]);
         }
+        $imagePath = public_path('images/pr1.png');
+        $imageData = base64_encode(file_get_contents($imagePath));
+        $imageType = pathinfo($imagePath, PATHINFO_EXTENSION);
+        $imageSrc = 'data:image/' . $imageType . ';base64,' . $imageData;
+        // ✅ Generate and download PDF receipt
+        $pdf = Pdf::loadView('pdf.receipt', [
+            'cart' => $this->cart,
+            'amountPaid' => $this->amountPaid,
+            'change' => $this->change,
+            'logo' => $imageSrc,
+        ]);
 
-        // Clear the cart after checkout
+        $fileName = 'receipt_' . now()->format('Ymd_His') . '.pdf';
+
+        // ✅ Reset cart after PDF generation
         $this->cart = [];
         $this->totalAmount = 0;
+        $this->amountPaid = 0;
+        $this->change = 0;
 
-        Notification::make()
-            ->title('Checkout successful! Stock updated.')
-            ->success()
-            ->send();
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->output();
+        }, $fileName);
     }
 }

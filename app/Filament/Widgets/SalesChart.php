@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 class SalesChart extends ChartWidget
 {
     protected static ?string $heading = 'Sales Overview';
-    protected static ?int $sort = 1;
+    protected static ?int $sort = 2;
 
     protected int|string|array $columnSpan = 2;
     public function getHeading(): string

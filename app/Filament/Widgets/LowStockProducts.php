@@ -20,5 +20,4 @@ class LowStockProducts extends StatsOverviewWidget
                 ->color($lowStockCount > 0 ? 'danger' : 'success'),
         ];
     }
-
 }

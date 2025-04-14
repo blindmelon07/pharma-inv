@@ -30,19 +30,21 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        
+
         return $panel
             ->default()
             ->id('admin')
             ->path('admin')
             ->login()
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Blue,
             ])
+            ->brandLogo(asset('images/pr1.png'))
+            ->brandLogoHeight('4rem')
             ->sidebarCollapsibleOnDesktop()
             ->profile()
             ->globalSearch()
-            ->globalSearchFieldSuffix(fn (): ?string => match (Platform::detect()) {
+            ->globalSearchFieldSuffix(fn(): ?string => match (Platform::detect()) {
                 Platform::Windows, Platform::Linux => 'CTRL+K',
                 Platform::Mac => '⌘K',
                 default => null,
@@ -79,9 +81,5 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
-            
-
     }
- 
-
 }

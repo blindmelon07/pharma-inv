@@ -6,10 +6,11 @@ use App\Models\Product;
 use Filament\Forms\Components\Card;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
+
 class TotalSalesWidget extends ChartWidget
 {
     protected static ?string $heading = 'Total Sales';
-
+    protected static ?int $sort = 3;
     protected function getData(): array
     {
         // Fetch product names and their total sales (price * quantity)
