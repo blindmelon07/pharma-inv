@@ -20,42 +20,51 @@ class ProductResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-cube';
     protected static ?string $navigationGroup = 'Inventory Management';
-      // Make the resource globally searchable
-      public static function getGloballySearchableAttributes(): array
-      {
-          return ['name', 'quantity'];
-      }
-      public static function getGlobalSearchResultDetails(Model $record): array
-      {
+    // Make the resource globally searchable
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'quantity'];
+    }
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
         return [
             'Quantity' => $record->quantity,
         ];
-      }
-      public static function getGlobalSearchResultUrl(Model $record): string
-      {
-          return static::getUrl('index', ['record' => $record]);
-      }
-      
+    }
+    public static function getGlobalSearchResultUrl(Model $record): string
+    {
+        return static::getUrl('index', ['record' => $record]);
+    }
+
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')->required(),
-            Forms\Components\Select::make('category_id')
-                ->relationship('category', 'name')
-                ->required(),
-            Forms\Components\Select::make('supplier_id')
-                ->relationship('supplier', 'name')
-            ->required(),
-            Forms\Components\TextInput::make('quantity')->numeric()->required(),
-            Forms\Components\TextInput::make('quantity_per_box')
-    ->numeric()
-    ->default(1)
-    ->required()
-    ->label('Quantity per Box'),
-            Forms\Components\TextInput::make('price')->numeric()->required(),
-            Forms\Components\DatePicker::make('expiry_date'),
+                Forms\Components\Select::make('category_id')
+                    ->relationship('category', 'name')
+                    ->required(),
+                Forms\Components\Select::make('supplier_id')
+                    ->relationship('supplier', 'name')
+                    ->required(),
+                Forms\Components\Select::make('product_type')
+                    ->label('Type')
+                    ->options([
+                        'tablet' => 'Tablet',
+                        'capsule' => 'Capsule',
+                        'syrup' => 'Syrup',
+                        'suspension' => 'Suspension',
+                    ])
+                    ->required(),
+                Forms\Components\TextInput::make('quantity')->numeric()->required(),
+                Forms\Components\TextInput::make('quantity_per_box')
+                    ->numeric()
+                    ->default(1)
+                    ->required()
+                    ->label('Quantity per Box'),
+                Forms\Components\TextInput::make('price')->numeric()->required(),
+                Forms\Components\DatePicker::make('expiry_date'),
             ]);
     }
 
@@ -64,12 +73,13 @@ class ProductResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')->sortable()->searchable(),
-            Tables\Columns\TextColumn::make('category.name')->sortable(),
-            Tables\Columns\TextColumn::make('supplier.name')->sortable(),
-            Tables\Columns\TextColumn::make('quantity')->sortable(),
-            Tables\Columns\TextColumn::make('quantity_per_box')->label('Qty/Box')->sortable(),
-            Tables\Columns\TextColumn::make('price')->sortable(),
-            Tables\Columns\TextColumn::make('expiry_date')->date(),
+                Tables\Columns\TextColumn::make('category.name')->sortable(),
+                Tables\Columns\TextColumn::make('supplier.name')->sortable(),
+                Tables\Columns\TextColumn::make('form_type')->label('Form')->sortable(),
+                Tables\Columns\TextColumn::make('quantity')->sortable(),
+                Tables\Columns\TextColumn::make('quantity_per_box')->label('Qty/Box')->sortable(),
+                Tables\Columns\TextColumn::make('price')->sortable(),
+                Tables\Columns\TextColumn::make('expiry_date')->date(),
             ])
             ->filters([
                 //

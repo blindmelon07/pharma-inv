@@ -14,6 +14,7 @@ class Product extends Model
         'name',
         'category_id',
         'supplier_id',
+        'product_type',
         'quantity',
         'quantity_per_box',
         'price',
