@@ -74,9 +74,14 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                \Hasnayeen\Themes\Http\Middleware\SetTheme::class
             ])
 
-            ->plugin(FilamentAccessManagementPanel::make())
+            ->plugin(
+                // FilamentAccessManagementPanel::make(),
+                \Hasnayeen\Themes\ThemesPlugin::make()
+                // ->canViewThemesPage(fn() => auth()->user()?->is_admin),
+            )
 
             ->authMiddleware([
                 Authenticate::class,
