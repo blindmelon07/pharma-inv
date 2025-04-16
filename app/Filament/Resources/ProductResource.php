@@ -48,7 +48,7 @@ class ProductResource extends Resource
                 Forms\Components\Select::make('supplier_id')
                     ->relationship('supplier', 'name')
                     ->required(),
-                Forms\Components\Select::make('product_type')
+                Forms\Components\Select::make('form_type')
                     ->label('Type')
                     ->options([
                         'tablet' => 'Tablet',
@@ -75,7 +75,7 @@ class ProductResource extends Resource
                 Tables\Columns\TextColumn::make('name')->sortable()->searchable(),
                 Tables\Columns\TextColumn::make('category.name')->sortable(),
                 Tables\Columns\TextColumn::make('supplier.name')->sortable(),
-                Tables\Columns\TextColumn::make('form_type')->label('Form')->sortable(),
+                Tables\Columns\TextColumn::make('form_type')->label('Product Type')->sortable(),
                 Tables\Columns\TextColumn::make('quantity')->sortable(),
                 Tables\Columns\TextColumn::make('quantity_per_box')->label('Qty/Box')->sortable(),
                 Tables\Columns\TextColumn::make('price')->sortable(),
