@@ -49,6 +49,21 @@ class ReportResource extends Resource
                 Tables\Columns\TextColumn::make('transaction_date')
                     ->date()
                     ->sortable(),
+                    Tables\Columns\TextColumn::make('average_usage')
+    ->label('Average Daily Usage')
+    ->getStateUsing(function ($record) {
+        // Calculate average usage based on transaction data
+        $totalUsage = Transaction::where('product_id', $record->product_id)
+            ->where('type', 'out') // Only consider 'out' type (sales or dispensation)
+            ->whereBetween('transaction_date', [
+                Carbon::now()->subDays(30)->toDateString(), // Last 30 days for example
+                Carbon::now()->toDateString(),
+            ])
+            ->sum('quantity');
+
+        return $totalUsage / 30; // Average per day in last 30 days
+    })
+    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),
@@ -83,7 +98,63 @@ class ReportResource extends Resource
                                 break;
                         }
                     }),
+                SelectFilter::make('type')
+                    ->label('Transaction Type')
+                    ->options([
+                        'in' => 'Stock In',
+                        'out' => 'Stock Out',
+                    ])
+                    ->query(fn ($query, $data) => $query->where('type', $data['value'])),
+                SelectFilter::make('product_id')
+                    ->label('Product')
+                    ->relationship('product', 'name'),
+                Tables\Filters\Filter::make('custom_date_range')
+                    ->form([
+                        Forms\Components\DatePicker::make('from')->label('From'),
+                        Forms\Components\DatePicker::make('to')->label('To'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        if ($data['from']) {
+                            $query->whereDate('transaction_date', '>=', $data['from']);
+                        }
+
+                        if ($data['to']) {
+                            $query->whereDate('transaction_date', '<=', $data['to']);
+                        }
+                    }),
+                SelectFilter::make('movement')
+                    ->label('Item Movement')
+                    ->options([
+                        'fast' => 'Fast-Moving Items',
+                        'slow' => 'Slow-Moving Items',
+                    ])
+                    ->query(function ($query, $data) {
+                        if ($data['value'] === 'fast') {
+                            // Fetch fast-moving items by summing quantity sold and sorting by highest sales
+                            $query->join(DB::raw('(
+                                SELECT product_id, SUM(quantity) as total_quantity
+                                FROM transactions
+                                WHERE type = "out"
+                                GROUP BY product_id
+                                ORDER BY total_quantity DESC
+                                LIMIT 10
+                            ) as movement'), 'transactions.product_id', '=', 'movement.product_id');
+                        }
+
+                        if ($data['value'] === 'slow') {
+                            // Fetch slow-moving items by summing quantity sold and sorting by lowest sales
+                            $query->join(DB::raw('(
+                                SELECT product_id, SUM(quantity) as total_quantity
+                                FROM transactions
+                                WHERE type = "out"
+                                GROUP BY product_id
+                                ORDER BY total_quantity ASC
+                                LIMIT 10
+                            ) as movement'), 'transactions.product_id', '=', 'movement.product_id');
+                        }
+                    }),
             ])
+            
             ->actions([
                 Tables\Actions\Action::make('download')
                     ->label('Download CSV')
@@ -111,6 +182,7 @@ class ReportResource extends Resource
     {
         return [
             'index' => Pages\ListReports::route('/'),
+          
         ];
     }
 
