@@ -59,8 +59,8 @@ class AdminPanelProvider extends PanelProvider
                 // Widgets\AccountWidget::class,
                 // TotalSalesWidget::class,
 
-                LowStockProducts::class,
-                ExpiringSoonProducts::class,
+                // LowStockProducts::class,
+                // ExpiringSoonProducts::class,
                 SalesChart::class,
 
             ])

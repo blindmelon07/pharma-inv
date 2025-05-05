@@ -1,9 +1,9 @@
 <x-filament::page>
-    <div class="mx-auto max-w-7xl">
-        <form wire:submit.prevent="checkout" class="space-y-6">
+    <div class="max-w-full px-8 mx-auto">
+        <form wire:submit.prevent="checkout" class="space-y-8">
             <!-- Header Section -->
-            <div class="p-6 bg-white rounded-lg shadow-sm">
-                <h2 class="mb-4 text-2xl font-bold text-gray-800">Point of Sale</h2>
+            <div class="w-full p-10 bg-white rounded-lg shadow-sm">
+                <h2 class="mb-8 text-3xl font-bold text-gray-800">Point of Sale</h2>
                 {{ $this->form }}
             </div>
 
