@@ -1,81 +1,104 @@
 <x-filament::page>
-    <!-- Product Selection Form -->
-    <form wire:submit.prevent="checkout" class="space-y-4">
-        {{ $this->form }}
+    <div class="mx-auto max-w-7xl">
+        <form wire:submit.prevent="checkout" class="space-y-6">
+            <!-- Header Section -->
+            <div class="p-6 bg-white rounded-lg shadow-sm">
+                <h2 class="mb-4 text-2xl font-bold text-gray-800">Point of Sale</h2>
+                {{ $this->form }}
+            </div>
 
-        <x-filament::button type="submit">
-            Checkout
-        </x-filament::button>
-    </form>
+            <!-- Cart Section -->
+            <div class="p-6 bg-white rounded-lg shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Shopping Cart</h2>
+                    <span class="text-sm text-gray-500">Items: {{ count($cart) }}</span>
+                </div>
 
-    <!-- Display Cart Table -->
-    <div class="mt-6">
-        <h2 class="text-lg font-bold">Cart</h2>
-        <table class="min-w-full bg-white border border-gray-200">
-            <thead>
-                <tr class="bg-gray-200">
-                    <th class="px-4 py-2 border">Product</th>
-                    <th class="px-4 py-2 border">Price</th>
-                    <th class="px-4 py-2 border">Quantity</th>
-                    <th class="px-4 py-2 border">Total</th>
-                    <th class="px-4 py-2 border">Prescription</th>
-                    <th class="px-4 py-2 border">Remarks</th>
-                    <th class="px-4 py-2 border">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($cart as $index => $item)
-                    <tr>
-                        <td class="px-4 py-2 border">{{ $item['name'] }}</td>
-                        <td class="px-4 py-2 border">{{ number_format($item['price'], 2) }}</td>
-                        <td class="px-4 py-2 border">
-                            <input type="number" wire:model="cart.{{ $index }}.quantity"
-                                   class="w-16 text-center border rounded" min="1" wire:change="updateCart">
-                        </td>
-                        <td class="px-4 py-2 border">{{ number_format($item['total'], 2) }}</td>
-                        <td class="px-4 py-2 border">
-                            <select wire:model="cart.{{ $index }}.prescription" class="w-full text-center border rounded">
-                                <option value="No">No</option>
-                                <option value="Yes">Yes</option>
-                            </select>
-                        </td>
-                        <td class="px-4 py-2 border">
-                            <input type="text" wire:model="cart.{{ $index }}.remarks"
-                                   class="w-full text-center border rounded" placeholder="Enter remarks">
-                        </td>
-                        <td class="px-4 py-2 border">
-                            <x-filament::button wire:click="removeFromCart({{ $index }})" color="danger">
-                                Remove
-                            </x-filament::button>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Product</th>
+                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Price</th>
+                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Quantity</th>
+                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Total</th>
+                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Prescription</th>
+                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Remarks</th>
+                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach ($cart as $index => $item)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{{ $item['name'] }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">₱{{ number_format($item['price'], 2) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <input type="number" wire:model="cart.{{ $index }}.quantity"
+                                               class="w-20 text-center border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+                                               min="1" wire:change="updateCart">
+                                    </td>
+                                    <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">₱{{ number_format($item['total'], 2) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <select wire:model="cart.{{ $index }}.prescription"
+                                                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500">
+                                            <option value="No">No</option>
+                                            <option value="Yes">Yes</option>
+                                        </select>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <input type="text" wire:model="cart.{{ $index }}.remarks"
+                                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+                                               placeholder="Enter remarks">
+                                    </td>
+                                    <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
+                                        <x-filament::button wire:click="removeFromCart({{ $index }})"
+                                                          color="danger"
+                                                          size="sm">
+                                            Remove
+                                        </x-filament::button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
 
-            <!-- Display Amount Paid and Change Below the Table -->
+                <!-- Payment Summary -->
+                <div class="p-6 mt-6 rounded-lg bg-gray-50">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Total Amount:</span>
+                                <span class="text-lg font-bold text-gray-900">₱{{ number_format($totalAmount, 2) }}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Amount Paid:</span>
+                                <div class="w-48">
+                                    <input type="number"
+                                           wire:model="amountPaid"
+                                           wire:input="updateChange"
+                                           class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+                                           min="0"
+                                           placeholder="Enter amount">
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Change:</span>
+                                <span class="text-lg font-bold text-green-600">₱{{ number_format($change, 2) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        </table>
-        <tfoot>
-            <tr>
-                <td colspan="3" class="px-4 py-2 font-bold text-right border">Total Amount:</td>
-                <td class="px-4 py-2 font-bold border">{{ number_format($totalAmount, 2) }}</td>
-                <td colspan="3"></td>
-            </tr>
-            <tr>
-                <td colspan="3" class="px-4 py-2 font-bold text-right border">Amount Paid:</td>
-                <td class="px-4 py-2 border">
-                    <input type="number" wire:model="amountPaid" wire:input="updateChange"
-                           class="w-full text-center border rounded" min="0">
-                </td>
-                <td colspan="3"></td>
-            </tr>
-            <tr>
-                <td colspan="3" class="px-4 py-2 font-bold text-right border">Change:</td>
-                <td class="px-4 py-2 font-bold text-green-600 border">{{ number_format($change, 2) }}</td>
-                <td colspan="3"></td>
-            </tr>
-        </tfoot>
+            <!-- Checkout Button -->
+            <div class="flex justify-center">
+                <x-filament::button type="submit"
+                                  size="lg"
+                                  class="px-8 py-3">
+                    Complete Checkout
+                </x-filament::button>
+            </div>
+        </form>
     </div>
-
-
 </x-filament::page>
