@@ -18,6 +18,7 @@ use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Collection;
+use PrintFilament\Print\Infolists\Components\PrintComponent;
 
 class PosResource extends Resource
 {

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ReportResource\Pages;
@@ -39,7 +40,7 @@ class ReportResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('type')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'in' => 'success',
                         'out' => 'danger',
                     }),
@@ -49,21 +50,22 @@ class ReportResource extends Resource
                 Tables\Columns\TextColumn::make('transaction_date')
                     ->date()
                     ->sortable(),
-                    Tables\Columns\TextColumn::make('average_usage')
-    ->label('Average Daily Usage')
-    ->getStateUsing(function ($record) {
-        // Calculate average usage based on transaction data
-        $totalUsage = Transaction::where('product_id', $record->product_id)
-            ->where('type', 'out') // Only consider 'out' type (sales or dispensation)
-            ->whereBetween('transaction_date', [
-                Carbon::now()->subDays(30)->toDateString(), // Last 30 days for example
-                Carbon::now()->toDateString(),
-            ])
-            ->sum('quantity');
+                Tables\Columns\TextColumn::make('average_usage')
+                    ->label('Average Daily Usage (%)')
+                    ->getStateUsing(function ($record) {
+                        // Calculate average usage based on transaction data
+                        $totalUsage = Transaction::where('product_id', $record->product_id)
+                            ->where('type', 'out') // Only consider 'out' type (sales or dispensation)
+                            ->whereBetween('transaction_date', [
+                                Carbon::now()->subDays(30)->toDateString(), // Last 30 days for example
+                                Carbon::now()->toDateString(),
+                            ])
+                            ->sum('quantity');
 
-        return $totalUsage / 30; // Average per day in last 30 days
-    })
-    ->sortable(),
+                        return $totalUsage / 30; // Average per day in last 30 days
+                    })
+                    ->formatStateUsing(fn($state) => number_format($state, 2))
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),
@@ -104,7 +106,7 @@ class ReportResource extends Resource
                         'in' => 'Stock In',
                         'out' => 'Stock Out',
                     ])
-                    ->query(fn ($query, $data) => $query->where('type', $data['value'])),
+                    ->query(fn($query, $data) => $query->where('type', $data['value'])),
                 SelectFilter::make('product_id')
                     ->label('Product')
                     ->relationship('product', 'name'),
@@ -154,7 +156,7 @@ class ReportResource extends Resource
                         }
                     }),
             ])
-            
+
             ->actions([
                 Tables\Actions\Action::make('download')
                     ->label('Download CSV')
@@ -182,80 +184,80 @@ class ReportResource extends Resource
     {
         return [
             'index' => Pages\ListReports::route('/'),
-          
+
         ];
     }
 
     protected static function downloadReport($data): \Symfony\Component\HttpFoundation\StreamedResponse
-{
-    $period = $data['period'] ?? 'daily';
-    $now = Carbon::now();
+    {
+        $period = $data['period'] ?? 'daily';
+        $now = Carbon::now();
 
-    $query = Transaction::query()
-        ->where('type', 'out') // Only include outgoing transactions
-        ->with('product'); // Eager load the product relationship
+        $query = Transaction::query()
+            ->where('type', 'out') // Only include outgoing transactions
+            ->with('product'); // Eager load the product relationship
 
-    switch ($period) {
-        case 'daily':
-            $query->whereDate('transaction_date', $now->toDateString());
-            break;
-        case 'weekly':
-            $query->whereBetween('transaction_date', [
-                $now->startOfWeek()->toDateString(),
-                $now->endOfWeek()->toDateString(),
-            ]);
-            break;
-        case 'monthly':
-            $query->whereBetween('transaction_date', [
-                $now->startOfMonth()->toDateString(),
-                $now->endOfMonth()->toDateString(),
-            ]);
-            break;
-    }
-
-    $transactions = $query->get();
-
-    if ($transactions->isEmpty()) {
-        throw new \Exception("No transactions found for the selected period: {$period}");
-    }
-
-    $fileName = "sales_report_{$period}_{$now->format('Y-m-d')}.csv";
-
-    $headers = [
-        'Content-Type' => 'text/csv',
-        'Content-Disposition' => "attachment; filename={$fileName}",
-    ];
-
-    $callback = function () use ($transactions) {
-        $file = fopen('php://output', 'w');
-
-        // Add CSV headers
-        fputcsv($file, [
-            'Product',
-            'Type',
-            'Quantity',
-            'Price',
-            'Total Revenue',
-            'Transaction Date',
-        ]);
-
-        // Add rows
-        foreach ($transactions as $transaction) {
-            $totalRevenue = $transaction->quantity * $transaction->product->price;
-
-            fputcsv($file, [
-                $transaction->product->name,
-                $transaction->type,
-                $transaction->quantity,
-                $transaction->product->price,
-                $totalRevenue,
-                $transaction->transaction_date,
-            ]);
+        switch ($period) {
+            case 'daily':
+                $query->whereDate('transaction_date', $now->toDateString());
+                break;
+            case 'weekly':
+                $query->whereBetween('transaction_date', [
+                    $now->startOfWeek()->toDateString(),
+                    $now->endOfWeek()->toDateString(),
+                ]);
+                break;
+            case 'monthly':
+                $query->whereBetween('transaction_date', [
+                    $now->startOfMonth()->toDateString(),
+                    $now->endOfMonth()->toDateString(),
+                ]);
+                break;
         }
 
-        fclose($file);
-    };
+        $transactions = $query->get();
 
-    return response()->stream($callback, 200, $headers);
-}
+        if ($transactions->isEmpty()) {
+            throw new \Exception("No transactions found for the selected period: {$period}");
+        }
+
+        $fileName = "sales_report_{$period}_{$now->format('Y-m-d')}.csv";
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename={$fileName}",
+        ];
+
+        $callback = function () use ($transactions) {
+            $file = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($file, [
+                'Product',
+                'Type',
+                'Quantity',
+                'Price',
+                'Total Revenue',
+                'Transaction Date',
+            ]);
+
+            // Add rows
+            foreach ($transactions as $transaction) {
+                $totalRevenue = $transaction->quantity * $transaction->product->price;
+
+                fputcsv($file, [
+                    $transaction->product->name,
+                    $transaction->type,
+                    $transaction->quantity,
+                    $transaction->product->price,
+                    $totalRevenue,
+                    $transaction->transaction_date,
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }

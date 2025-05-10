@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "178e19c80b86c1f1d0362cbf4b25e7bf",
+    "content-hash": "f8982d3679a6649b132b6a87ad80aed2",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -4237,6 +4237,79 @@
                 }
             ],
             "time": "2024-07-20T21:41:07+00:00"
+        },
+        {
+            "name": "print-filament/print",
+            "version": "v1.3.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/AHMEDHASSAN202/print-filament.git",
+                "reference": "7c00650583d688cdaa7637904175e13f680dda17"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/AHMEDHASSAN202/print-filament/zipball/7c00650583d688cdaa7637904175e13f680dda17",
+                "reference": "7c00650583d688cdaa7637904175e13f680dda17",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^3.0",
+                "php": "^8.1",
+                "spatie/laravel-package-tools": "^1.15.0"
+            },
+            "require-dev": {
+                "nunomaduro/collision": "^7.9",
+                "orchestra/testbench": "^8.0",
+                "pestphp/pest": "^2.1",
+                "pestphp/pest-plugin-arch": "^2.0",
+                "pestphp/pest-plugin-laravel": "^2.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "Print": "PrintFilament\\Print\\Facades\\PrintFilament"
+                    },
+                    "providers": [
+                        "PrintFilament\\Print\\PrintServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "PrintFilament\\Print\\": "src/",
+                    "PrintFilament\\Print\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ahmed Hassan",
+                    "email": "ahmedhassanhassan707@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "The print-filament package is a simple and efficient tool that allows users to quickly print the current webpage directly from their browser. This plugin enhances the convenience of printing online content by providing a one-click solution for generating printer-friendly versions of the pages you're viewing.",
+            "homepage": "https://github.com/print/print",
+            "keywords": [
+                "filament",
+                "laravel",
+                "print"
+            ],
+            "support": {
+                "issues": "https://github.com/print/print/issues",
+                "source": "https://github.com/print/print"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/print",
+                    "type": "github"
+                }
+            ],
+            "time": "2024-12-27T15:06:23+00:00"
         },
         {
             "name": "psr/cache",

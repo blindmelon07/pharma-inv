@@ -39,6 +39,7 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Blue,
             ])
+            ->databaseNotifications()
             ->brandLogo(asset('images/pr1.png'))
             ->brandLogoHeight('4rem')
             ->sidebarCollapsibleOnDesktop()
