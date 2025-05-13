@@ -5,10 +5,12 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ProductResource\Pages;
 use App\Filament\Resources\ProductResource\RelationManagers;
 use App\Models\Product;
+use App\Models\Transaction;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -76,13 +78,45 @@ class ProductResource extends Resource
                 Tables\Columns\TextColumn::make('category.name')->sortable(),
                 Tables\Columns\TextColumn::make('supplier.name')->sortable(),
                 Tables\Columns\TextColumn::make('product_type')->label('Product Type')->sortable(),
-                Tables\Columns\TextColumn::make('quantity')->sortable(),
+                Tables\Columns\TextColumn::make('quantity')
+                    ->sortable()
+                    ->color(function ($record) {
+                        // Apply red color for low stock
+                        return $record->quantity < 10 ? 'danger' : null;
+                    }),
                 Tables\Columns\TextColumn::make('quantity_per_box')->label('Qty/Box')->sortable(),
                 Tables\Columns\TextColumn::make('price')->sortable(),
-                Tables\Columns\TextColumn::make('expiry_date')->date(),
+                Tables\Columns\TextColumn::make('expiry_date')
+                    ->date()
+                    ->color(function ($record) {
+                        // Apply yellow color for expiring soon
+                        return ($record->expiry_date && $record->expiry_date <= now()->addDays(30)) ? 'warning' : null;
+                    }),
             ])
             ->filters([
-                //
+                Filter::make('low_stock')
+                    ->label('Low Stock')
+                    ->query(fn($query) => $query->where('quantity', '<', 10)),
+                Filter::make('fast_moving')
+                    ->label('Fast-Moving')
+                    ->query(function ($query) {
+                        $productIds = Transaction::where('type', 'out')
+                            ->where('transaction_date', '>=', now()->subDays(30))
+                            ->select('product_id')
+                            ->groupBy('product_id')
+                            ->havingRaw('SUM(quantity) > 20')
+                            ->pluck('product_id');
+
+                        return $query->whereIn('id', $productIds);
+                    }),
+                Filter::make('expiring_soon')
+                    ->label('Expiring Soon')
+                    ->query(function ($query) {
+                        return $query
+                            ->whereNotNull('expiry_date')
+                            ->where('expiry_date', '>=', now())
+                            ->where('expiry_date', '<=', now()->addDays(30));
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

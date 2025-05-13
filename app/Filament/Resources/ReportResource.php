@@ -12,6 +12,9 @@ use Filament\Forms\Form;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ReportResource extends Resource
 {
@@ -193,6 +196,7 @@ class ReportResource extends Resource
         $period = $data['period'] ?? 'daily';
         $now = Carbon::now();
 
+        // Prepare the query for the selected period
         $query = Transaction::query()
             ->where('type', 'out') // Only include outgoing transactions
             ->with('product'); // Eager load the product relationship
@@ -215,49 +219,73 @@ class ReportResource extends Resource
                 break;
         }
 
+        // Get the transactions for the given period
         $transactions = $query->get();
 
-        if ($transactions->isEmpty()) {
-            throw new \Exception("No transactions found for the selected period: {$period}");
+        // Calculate total sales
+        $totalSales = $transactions->sum(function ($transaction) {
+            return $transaction->quantity * $transaction->product->price;
+        });
+
+        // Create a new Spreadsheet object
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Add BOM (Byte Order Mark) to fix encoding issues in Excel
+        // This ensures that Excel will correctly handle the UTF-8 encoding
+        // fwrite($file, "\xEF\xBB\xBF"); // Uncomment if you're writing directly to CSV
+
+        // Add the logo to the spreadsheet
+        $logoPath = public_path('images/pr.png'); // Update with the correct path to your logo file
+        if (file_exists($logoPath)) {
+            $drawing = new Drawing();
+            $drawing->setName('Company Logo');
+            $drawing->setDescription('Company Logo');
+            $drawing->setPath($logoPath);
+            $drawing->setHeight(100); // Adjust logo size
+            $drawing->setCoordinates('A1'); // Position the logo in the first row, first column
+            $drawing->setWorksheet($sheet);
         }
 
-        $fileName = "sales_report_{$period}_{$now->format('Y-m-d')}.csv";
+        // Add the headers for the transaction data
+        $sheet->setCellValue('A6', 'Product');
+        $sheet->setCellValue('B6', 'Type');
+        $sheet->setCellValue('C6', 'Quantity');
+        $sheet->setCellValue('D6', 'Price');
+        $sheet->setCellValue('E6', 'Total Revenue');
+        $sheet->setCellValue('F6', 'Transaction Date');
 
+        // Populate the rows with transaction data, starting from row 7
+        $row = 7; // Start from row 7 (to leave space for the logo and headers)
+        foreach ($transactions as $transaction) {
+            $totalRevenue = $transaction->quantity * $transaction->product->price;
+
+            $sheet->setCellValue('A' . $row, $transaction->product->name);
+            $sheet->setCellValue('B' . $row, $transaction->type);
+            $sheet->setCellValue('C' . $row, $transaction->quantity);
+            $sheet->setCellValue('D' . $row, $transaction->product->price);
+            $sheet->setCellValue('E' . $row, $totalRevenue);
+            $sheet->setCellValue('F' . $row, $transaction->transaction_date);
+            $row++;
+        }
+
+        // Add a row for the total sales at the bottom
+        $sheet->setCellValue('D' . $row, 'Total Sales');
+        $sheet->setCellValue('E' . $row, '₱' . number_format($totalSales, 2));
+        // Write the response to the stream
+        $writer = new Xlsx($spreadsheet);
+
+        // Set the filename for the Excel file
+        $fileName = "sales_report_{$period}_{$now->format('Y-m-d')}.xlsx";
+
+        // Set the headers for downloading the Excel file
         $headers = [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Content-Disposition' => "attachment; filename={$fileName}",
         ];
 
-        $callback = function () use ($transactions) {
-            $file = fopen('php://output', 'w');
-
-            // Add CSV headers
-            fputcsv($file, [
-                'Product',
-                'Type',
-                'Quantity',
-                'Price',
-                'Total Revenue',
-                'Transaction Date',
-            ]);
-
-            // Add rows
-            foreach ($transactions as $transaction) {
-                $totalRevenue = $transaction->quantity * $transaction->product->price;
-
-                fputcsv($file, [
-                    $transaction->product->name,
-                    $transaction->type,
-                    $transaction->quantity,
-                    $transaction->product->price,
-                    $totalRevenue,
-                    $transaction->transaction_date,
-                ]);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return response()->stream(function () use ($writer) {
+            $writer->save('php://output');
+        }, 200, $headers);
     }
 }
